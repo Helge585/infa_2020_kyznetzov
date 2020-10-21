@@ -72,7 +72,65 @@ def new_ball():
 	color = COLORS[randint(0, 5)]
 	circle(screen, color, (x, y), r)
 	return [x, y, dx, dy, color, r]
-	
+
+def move_squares(screen, squares, squares_count):
+	"""redraw squares considering the screen's parametrs 
+	   by this plan:
+			1. paint all the squres in black color
+			2. if current step leaves screen then 
+				drew in another side
+			3. redraw all the balls with new positions
+	   [0] - x, [1] - y, [2] - vector, [3] - color, 
+	   [4] - side_len, [5] - step_count
+	"""
+	for i in range(0, squares_count):
+		sq = squares[i]
+		rect(screen, BLACK, (sq[0], sq[1], sq[4], sq[4]))
+		if sq[2] == 1:#step right
+			if sq[0] + 2 * sq[4] < width:
+				sq[0] += sq[4]
+			else:
+				sq[0] = 0
+		elif sq[2] == 2:#step left
+			if sq[0] - 2 * sq[4] > 0:
+				sq[0] -= sq[4]
+			else:
+				sq[0] = width - sq[4]
+		elif sq[2] == 3:#step top
+			if sq[1] - 2 * sq[4] > 0:
+				sq[1] -= sq[4]
+			else:
+				sq[1] = height - sq[4]
+		elif sq[2] == 4:#step down
+			if sq[1] + 2 * sq[4] < height:
+				sq[1] += sq[4]
+			else:
+				sq[1] = 0
+		rect(screen, sq[3], (sq[0], sq[1], sq[4], sq[4]))
+		sq[5] -= 1
+		if sq[5] == 0:#get new steps and chanhe vector
+			sq[5] = randint(min_step, max_step)
+			sq[2] = randint(1, 4)
+
+def new_square():
+	"""create a new ball which has has the folowing 
+	construct: x, y, vector, color, side_len, step_count
+	where x - the top x coordinate
+		  y - the top y coordinate
+		  vector: 
+				1 - right
+				2 - left
+				3 - top
+				4 - down
+		  color - square's color
+	"""
+	x = randint(0 + max_radius, width - max_radius)
+	y = randint(0 + max_radius, height - max_radius)
+	vector = randint(1, 4)
+	color = COLORS[randint(0, 5)]
+	side_len = randint(min_radius, max_radius)
+	step_count = randint(min_step, max_step)
+	return [x, y, vector, color, side_len, step_count]
 
 def click(evt, balls, balls_count):
 	"""breaks ball if mouse clicked on the ball
@@ -113,18 +171,25 @@ BREAK_FPS = 3
 count = 0
 width = 1000
 height = 700
+
 max_radius = 100
 min_radius = 10
 balls_count = 2
+
+min_step = 5
+max_step = 15
+square_count = 2
 
 pygame.init()
 screen = pygame.display.set_mode((width, height))	
 clock = pygame.time.Clock()
 finished = False
 
+squares = []
 balls = []
 for i in range(0, balls_count):
 	balls.append(new_ball())
+	squares.append(new_square())
 
 while not finished:
 	clock.tick(FPS)
@@ -132,8 +197,10 @@ while not finished:
 		if event.type == pygame.QUIT:
 			finished = True
 		elif event.type == pygame.MOUSEBUTTONDOWN:
-			click(event, balls, balls_count)
+			#click(event, balls, balls_count)
+			pass
 	move_balls(screen, balls, balls_count)
+	move_squares(screen, squares, square_count)
 	pygame.display.update()
 
 print_count()
