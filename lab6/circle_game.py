@@ -13,12 +13,12 @@ BLACK = (0, 0, 0)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 #main constans
-FPS = 3
+FPS = 4
 BREAK_FPS = 3
 WIDTH = 1000
 HEIGHT = 700
 #ball's constans
-MAX_RADIUS = 100
+MAX_RADIUS = 50
 MIN_RADIUS = 10
 BALLS_COUNT = 2
 #square's constants
@@ -232,12 +232,11 @@ def click(screen, evt, balls, squares):
 	return check_balls(screen, evt, balls) +\
  			check_squares(screen, evt, squares)
 	
-def print_count():
-	print(count)
 
 def get_name(screen, clock):
+	"""reads player name and returns it"""
 	name = ""
-	start_str = "Write your name or '0' for exit"
+	start_str = "Write your name or enter for exit"
 	name_str = ">>> "
 	x_str = WIDTH // 3
 	y_str = HEIGHT // 3	
@@ -256,51 +255,128 @@ def get_name(screen, clock):
 	while not finished:
 		for event in pygame.event.get():
 			if event.type == pygame.KEYDOWN:
-				if event.__dict__["unicode"] == u"0":
+				if event.__dict__["unicode"] == u"\n" or\
+				event.__dict__["unicode"] == u"\r" :
 					finished = True
+				#if backspace and input isn't empty
+				elif event.__dict__["unicode"] == u"\b" and\
+				len(name_str) > 4:
+					#paint old input in black
+					textsurface = myfont.render(name_str, 
+												False, BLACK)
+					screen.blit(textsurface,(x_str, y_str + 30))
+					#delete one symbol
+					name_str = name_str[:-1]
+					#paint new input
+					textsurface = myfont.render(name_str, 
+												False, BLUE)
+					screen.blit(textsurface,(x_str, y_str + 30))
+					pygame.display.update()
+				#add new symbol in input
 				else:
 					name_str += event.__dict__["unicode"]
 					textsurface = myfont.render(name_str, 
 												False, BLUE)
 					screen.blit(textsurface,(x_str, y_str + 30))
 					pygame.display.update()
+	
 	return name_str[4:]
 	
 	
-	
-#hit_count
-count = 0
+def start_game():
+	"""game cicle, returns hit count"""
+	count = 0
+	squares = []
+	balls = []
+	for i in range(0, BALLS_COUNT):
+		balls.append(new_ball())
+		squares.append(new_square())
+	finished = False
+	while not finished:
+		clock.tick(FPS)
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				finished = True
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				count += click(screen, event, balls, squares)
+		move_balls(screen, balls)
+		move_squares(screen, squares)
+		pygame.display.update()
+	return count
+
+def record_result(result):
+	"""records best results in file"""
+	table_count = 3
+	try:
+		output_file = open("results.txt", mode = "r")
+	except OSError:
+		pass
+	#current minimum
+	min_res = min(result)[0]
+	#reads file's results > current minimum 
+	#and adds them in current result list
+	line = output_file.readline()
+	#print(line)
+	#return
+	while line != "":
+		count, name = line.split(" ")
+		if int(count) < min_res:
+			break
+		result.append([count, name])
+		line = output_file.readline()
+	output_file.close()
+	#sorts and writes the best players in file
+	result.sort(key = lambda res: res[0], reverse = True)
+	input_file = open("results.txt", mode = "w")
+	for i in range(0, min(table_count, len(result))):
+		input_file.write(str(result[i][0]) + " " + 
+							result[i][1] + "\r")
+	input_file.close()
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))	
 clock = pygame.time.Clock()
-finished = False
-
-print(get_name(screen, clock))
-clock.tick(FPS*3)
-pygame.display.update()
-
-"""
-squares = []
-balls = []
-for i in range(0, BALLS_COUNT):
-	balls.append(new_ball())
-	squares.append(new_square())
-
-while not finished:
-	name = get_name()
-	if len(name) == 0:
-		break
-	clock.tick(FPS)
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			finished = True
-		elif event.type == pygame.MOUSEBUTTONDOWN:
-			count += click(screen, event, balls, squares)
-			pass
-	move_balls(screen, balls)
-	move_squares(screen, squares)
+result = []
+#main cicle
+name = get_name(screen, clock)
+while len(name) > 0:
+	screen.fill(BLACK)
 	pygame.display.update()
-"""
-print_count()
+	count = start_game()
+	result.append([count, name])
+	screen.fill(BLACK)
+	pygame.display.update()
+	name = get_name(screen, clock)
+
+#print(result)
+record_result(result)
 pygame.quit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
