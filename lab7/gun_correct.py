@@ -28,15 +28,19 @@ class Ball():
                 fill=self.color
         )
         self.live = 30
-    def delete(self):
-        self.id = canv.create_oval(
-            self.x - self.r,
-            self.y - self.r,
-            self.x + self.r,
-            self.y + self.r,
-            fill='white',
-            outline= 'white'
-        )
+    def hide(self):
+        #self.id = canv.create_oval(
+        #    self.x - self.r,
+        #    self.y - self.r,
+        #    self.x + self.r,
+        #    self.y + self.r,
+        #    fill='white',
+        #    outline= 'white'
+        #)
+        self.y = self.x = -10
+        self.set_coords()
+
+
 
     def set_coords(self):
         canv.coords(
@@ -198,16 +202,15 @@ def new_game():
                 break
         canv.update()
         time.sleep(0.03)
-        #g1.targetting()
-        #g1.power_up()
+        g1.targetting()
+        g1.power_up()
     for ball in balls:
-        ball.delete()
+        ball.hide()
     bullet = 0
     balls = []
     time.sleep(1.0)
     canv.itemconfig(screen1, text='')
-    #root.after(750, new_game)
-
+    root.after(750, new_game)
 
 
 root = tk.Tk()
@@ -222,6 +225,8 @@ g1 = Gun()
 bullet = 0
 balls = []
 
+
 new_game()
+
 
 tk.mainloop()
